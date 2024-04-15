@@ -1,0 +1,264 @@
+---
+title: "FKassoh_Assignment12 - Linear Regression Modeling"
+author: "Fomba Kassoh"
+date: "2024-04-11"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+
+## Problem Statement 1
+
+Provide a scatterplot of LifeExp~TotExp, and run simple linear regression. Do not transform the 
+variables. Provide and interpret the F statistics, R^2, standard error,and p-values only. Discuss 
+whether the assumptions of simple linear regression met.
+
+***Load the Data***
+Load the WHO dataset into a data frame.
+```{r}
+# Load the necessary package
+library(readr)
+library(dplyr)
+
+# Load the cars dataset
+who_data = read_csv('https://raw.githubusercontent.com/hawa1983/DATA605Discussion/main/who.csv')
+
+head(who_data)
+```
+
+### Scatterplot of LifeExp as a function of TotExp
+
+Below is the plot of Average Life Expectancy and Total Government and Individual Spending. The assumption of linearity requires that there is a linear relationship between the independent variable (Total Expenditure) and the dependent variable (Life Expectancy). In the scatter plot, the relationship does not appear to be linear across the entire range of Total Expenditure. The points seem to flatten out as Total Expenditure increases, suggesting a possible logarithmic or polynomial relationship rather than a strictly linear one.
+```{r}
+# From the data frame 'who_data' with the columns LifeExp and TotExp
+plot(who_data$TotExp, who_data$LifeExp, main = "Life Expectancy vs Total Expenditure", xlab = "Total Expenditure", ylab = "Life Expectancy", pch = 19)
+```
+
+### Model the data
+
+Below is the Simple Linear model of the data with Total Expenditure 'TotExp' as the independent variable and Life Expectancy 'LifeExp'
+as the response variable.
+
+```{r}
+# Create a linear model predicting stopping distance based on speed
+who.lm <- lm(LifeExp ~ TotExp, data = who_data)
+
+who.lm
+```
+
+LifeExp=64.75+0.00006297×TotExp
+
+
+### Interpret the model output
+
+```{r}
+# Summary of the model
+summary(who.lm)
+```
+From the output of the linear regression analysis above, we can interpret the following statistics:
+
+**F-statistic:** With an F-statistic of 65.26 and a p-value of 7.71e-14, the model is statistically significant, rejecting the null hypothesis that the model has no explanatory power.
+
+**R-squared:** An R-squared of 0.2577 means the model explains roughly 25.77% of the variance in life expectancy, which measures the model's explanatory power but not the strength or direction of the association.
+
+**Adjusted R-squared:** At 0.2537, the adjusted R-squared accounts for the number of predictors, offering a more accurate fit measurement by penalizing for unnecessary variables.
+
+**Standard Error:** The residual standard error is 9.371, which indicates the average distance that the observed values fall from the regression line.
+
+p-values: The p-value for the TotExp coefficient is 7.71e-14, showing that TotExp is a statistically significant predictor of LifeExp. The intercept also has a statistically significant p-value of <2e-16.
+
+
+### Are the assumptions of simple linear regression met.
+
+Based on the regression diagnostic plots below, we can assess whether the assumptions of simple linear regression are met.
+
+```{r}
+par(mfrow=c(2,2))
+plot(who.lm)
+```
+
+
+
+**Linearity Assumption:** The curve in the Residuals vs Fitted plot suggests a non-linear relationship between the predictor and response variable, indicating that the linearity assumption may be violated.
+
+**Normality Assumption:** The deviations from the line in the tails of the Q-Q plot imply that the residuals may not be normally distributed, particularly with heavier tails than expected under normality.
+
+**Homoscedasticity:** The Scale-Location plot displays a pattern where the spread of residuals increases with fitted values, hinting at potential heteroscedasticity, contrary to the constant variance assumption.
+
+**Independence:** While the provided plots do not directly address this, the independence of residuals would require additional tests if data have a natural ordering (like time-series).
+
+**Influence:** A few points in the Residuals vs Leverage plot show higher leverage and Cook's distance, indicating the presence of influential points that could affect the model's estimates.
+
+
+## Problem Statement 2
+
+Raise life expectancy to the 4.6 power (i.e., LifeExp^4.6). Raise total expenditures to the 0.06 
+power (nearly a log transform, TotExp^.06). Plot LifeExp^4.6 as a function of TotExp^.06, and r 
+re-run the simple regression model using the transformed variables. Provide and interpret the F 
+statistics, R^2, standard error, and p-values. Which model is "better?"
+
+### Add new columns to the who_data dataframe to raise life expectancy to the 4.6 power total expenditures to the 0.06 power
+
+```{r}
+who_data$LifeExp_Power <- who_data$LifeExp^4.6
+who_data$TotExp_Power <- who_data$TotExp^0.06
+
+# Display the data frame to confirm the new columns have been added
+head(who_data)
+```
+
+### Scatter Plot of LifeExp^4.6 as a function of TotExp^.06
+
+The scatter plot shows a positive relationship between Life Expectancy raised to the 4.6th power and Total Expenditure raised to the 0.06th power. The upward trend of the fitted line indicates that as Total Expenditure increases, Life Expectancy tends to increase on the transformed scale. The plot supports the use of a transformed model to capture the relationship between these variables more linearly.
+
+```{r}
+# Plot the scatter plot
+plot(who_data$TotExp_Power, who_data$LifeExp_Power,
+     xlab = "Total Expenditure (Power 0.06)",
+     ylab = "Life Expectancy (Power 4.6)",
+     main = "Plot of Life Expectancy (Power 4.6) vs Total Expenditure (Power 0.06)")
+
+# Add a linear regression line to the plot:
+who.lm_power <- lm(LifeExp_Power ~ TotExp_Power, data = who_data)
+abline(who.lm_power, col = "red")
+```
+
+### Interpret the Transformed Model output
+
+```{r}
+# Summary of the model
+summary(who.lm_power)
+```
+
+***F-statistic:*** With a value of 507.7 and a p-value less than 2.2e-16, this model has a very strong statistical significance, indicating that the model provides a better fit than the intercept-only model.
+
+***R-squared:*** The R-squared value is 0.7298, suggesting that approximately 72.98% of the variability in the transformed Life Expectancy (LifeExp_Power) is explained by the transformed Total Expenditure (TotExp_Power). 
+
+***Adjusted R-squared:*** With a value of 0.7283, this model's adjusted R-squared is quite close to the R-squared value, which indicates that the number of predictors (in this case, one) is appropriate for the number of observations.
+
+***Standard Error:*** The residual standard error is 904,000 on 188 degrees of freedom. This value is quite large; however, considering that the dependent variable was raised to the power of 4.6, the actual scale of the residuals might still be appropriate.
+
+***p-values:*** The p-value for the TotExp_Power coefficient is extremely low (< 2.2e-16), demonstrating a highly significant relationship with LifeExp_Power.
+
+***Comparison***
+ - The transformed model explains a substantially higher proportion of the variance in life expectancy as indicated by the R-squared value (72.98% vs 25.77%).
+ - The standard errors are not directly comparable due to the transformation, but the residual standard error in the original model suggests a closer fit to the non-transformed data.
+ - Both models show statistical significance for Total Expenditure, but the transformed model has a much higher F-statistic, indicating a stronger overall model fit.
+ - The F-statistic and corresponding p-values are extremely low for both models, reinforcing the significance of the models.
+
+ - In summary, transforming the variables seems to have dramatically increased the explanatory power of the model as evidenced by the higher R-squared value.
+
+### Are the assumptions of simple linear regression met.
+
+Based on the regression diagnostic plots below, we can assess whether the assumptions of simple linear regression are met.
+
+```{r}
+par(mfrow=c(2,2))
+plot(who.lm_power)
+```
+
+Based on the diagnostic plots provided for the linear regression model:
+
+***Residuals vs Fitted:*** This plot doesn't show any clear patterns or systematic structure, which is good as it suggests linearity. However, there appears to be an increase in the spread of residuals as the fitted values increase, which may indicate potential heteroscedasticity.
+
+***Q-Q Plot of Residuals:*** The residuals largely follow the reference line, especially in the middle of the distribution, indicating that the residuals are approximately normally distributed. There are some deviations in the tails, but these are not extreme.
+
+***Scale-Location (or Spread-Location):*** The spread of residuals appears more constant across the range of fitted values, suggesting that the transformation has helped with homoscedasticity.
+
+***Residuals vs Leverage:*** This plot helps us to find influential cases — points that have a substantial impact on the calculation of the regression coefficients. Here, no individual points stand out with particularly high leverage or Cook's distance, suggesting there are no highly influential outliers in the data.
+
+***Comparison of the Residual Plots of Two Models***
+The transformed model seems to better satisfy the assumptions of linear regression. 
+
+ * The transformation has likely corrected some of the non-linear relationships present in the original model, as evidenced by the more random distribution of residuals in the transformed model's Residuals vs Fitted plot. 
+ * Normality of residuals has improved in the transformed model, as indicated by the closer alignment of points to the Q-Q line.
+ * Homoscedasticity also seems improved in the transformed model, as indicated by the more consistent spread of standardized residuals in the Scale-Location plot.
+ * Neither model exhibits problematic leverage points that would unduly influence the regression line.
+ 
+ 
+
+## Problem Statement 3
+
+Using the results from 3, forecast life expectancy when TotExp^.06 =1.5. Then forecast life 
+expectancy when TotExp^.06=2.5. 
+
+```{r}
+# Predict LifeExp_Power for TotExp_Power values
+predicted_power_1 <- predict(who.lm_power, newdata = data.frame(TotExp_Power = 1.5))
+predicted_power_2 <- predict(who.lm_power, newdata = data.frame(TotExp_Power = 2.5))
+
+# Convert predicted LifeExp_Power back to LifeExp
+predicted_lifeexp_1 <- predicted_power_1^(1/4.6)
+predicted_lifeexp_2 <- predicted_power_2^(1/4.6)
+
+# Output the predictions
+predicted_lifeexp_1
+predicted_lifeexp_2
+
+
+```
+
+
+## Problem Statement 4
+
+Build the following multiple regression model and interpret the F Statistics, R^2, standard error, 
+and p-values. How good is the model?
+LifeExp = b0+b1 x PropMd + b2 x TotExp +b3 x PropMD x TotExp
+
+```{r}
+# Fit the model
+who_mlm <- lm(LifeExp ~ PropMD + TotExp + PropMD*TotExp, data = who_data)
+
+# Get a summary of the model
+summary(who_mlm)
+
+```
+
+
+Based on the regression output:
+
+***F-Statistic:*** The F-statistic is 34.49 with a p-value < 2.2e-16, which is highly significant. This indicates that the model is statistically significant and the explanatory variables collectively have a strong linear relationship with the dependent variable, LifeExp.
+
+***R-squared:*** The R-squared value is 0.3574, meaning approximately 35.74% of the variability in LifeExp is explained by the model. While not extremely high, this does suggest the model has a moderate fit to the data.
+
+***Standard Error:*** The residual standard error is 8.765 on 186 degrees of freedom. This value is the estimate of the standard deviation of the error term, and it tells you how much the observed values deviate from the model's predicted values. A smaller standard error would be preferable as it would indicate a tighter clustering of points around the fitted regression line.
+
+***P-values:*** All the p-values for the coefficients, including the interaction term (PropMD*TotExp), are highly significant (p < 0.05), suggesting that each term contributes to the model. It's important to note that both the individual predictors and their interaction are significant.
+
+Overall, the model is statistically significant as indicated by the F-statistic and the significant p-values for the coefficients. However, the R-squared suggests that while the model explains some of the variability in the dependent variable, there might be other factors that also affect LifeExp which are not included in the model.
+
+## Problem Statement 5
+
+Forecast LifeExp when PropMD=.03 and TotExp = 14. Does this forecast seem realistic? Why 
+or why not
+
+  * The forecast for LifeExp when PropMD is 0.03 and TotExp is 14 is approximately 107.68 years.
+
+  * In terms of realism, a life expectancy of over 107 years seems quite unrealistic for the current population, given that the highest average life expectancies in the world are in the mid-80s. This forecast might suggest that the model is extrapolating beyond the range of data it was trained on, or that there are other factors at play that the model is not accounting for.
+
+```{r}
+# Manual calculation of the forecast
+
+# Given coefficients from the model output
+intercept = 6.277e+01
+b1 = 1.497e+03
+b2 = 7.233e-05
+b3 = -6.026e-03
+
+# Given values for PropMD and TotExp
+PropMD_value = 0.03
+TotExp_value = 14
+
+# Calculating the interaction term
+interaction = PropMD_value * TotExp_value
+
+# Forecasting LifeExp using the model coefficients
+LifeExp_forecast = intercept + (b1 * PropMD_value) + (b2 * TotExp_value) + (b3 * interaction)
+LifeExp_forecast
+
+```
+
